@@ -71,12 +71,12 @@ Planned module shape:
 
 ## Mapping Discipline
 
-`lxmfcot` should be strict.
+`lxmfcot` will be strict.
 
-- Only accept supported CoT event types.
-- Only map fields that are explicitly understood.
-- Reject or mark incomplete events that cannot satisfy required `LXDR` fields.
-- Do not silently invent protocol data.
+- It will only accept supported CoT event types.
+- It will only map fields that are explicitly understood.
+- It will reject or mark incomplete events that cannot satisfy required `LXDR` fields.
+- It will not silently invent protocol data.
 
 `LXDR` remains the authority for:
 
@@ -93,11 +93,11 @@ Planned module shape:
 
 ## Status
 
-This repository is in planning/bootstrap state.
+This repository is in early implementation state.
 
 The immediate next work is:
 
 - define the first CoT event contracts
 - define exact CoT to `LXDR` field mappings
-- build the minimal `PyTAK` application skeleton
+- build the first working `PyTAK` application skeleton
 - implement one end-to-end mapping, likely maintenance first

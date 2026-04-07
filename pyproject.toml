@@ -8,7 +8,9 @@ license = { file = "LICENSE" }
 authors = [
   { name = "ealvar3z" }
 ]
-dependencies = []
+dependencies = [
+  "pytak @ git+https://github.com/snstac/pytak.git@fa875a181bd724a7a841be2384677fc363ebbac5",
+]
 
 [project.scripts]
 lxmfcot = "lxmfcot.commands:main"

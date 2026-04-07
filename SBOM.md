@@ -32,11 +32,11 @@ Every direct dependency will record:
 ### `pytak`
 
 - Purpose: TAK/CoT transport client and worker framework
-- Source: GitHub
-- Pin: pending
-- License: pending verification
+- Source: `https://github.com/snstac/pytak`
+- Pin: `fa875a181bd724a7a841be2384677fc363ebbac5`
+- License: Apache-2.0
 - Scope: runtime
-- Notes: expected primary dependency for RX/TX queue workers and `CLITool` integration
+- Notes: primary dependency for RX/TX queue workers and `CLITool` integration
 
 ### `takproto`
 
@@ -68,10 +68,6 @@ Before adding a dependency:
 
 ## Status
 
-This file is an initial placeholder.
+This file is the initial local SBOM.
 
-It will be updated as soon as:
-
-- `pyproject.toml` is created
-- `pytak` is pinned
-- any additional direct dependency is introduced
+It will be updated whenever any additional direct dependency is introduced.
