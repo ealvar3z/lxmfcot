@@ -1,0 +1,21 @@
+[project]
+name = "lxmfcot"
+version = "0.1.0"
+description = "TAK/CoT bridge for the LXDR protocol."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+  { name = "ealvar3z" }
+]
+dependencies = []
+
+[project.scripts]
+lxmfcot = "lxmfcot.commands:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
