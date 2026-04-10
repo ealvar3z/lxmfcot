@@ -101,3 +101,31 @@ The immediate next work is:
 - define exact CoT to `LXDR` field mappings
 - build the first working `PyTAK` application skeleton
 - implement one end-to-end mapping, likely maintenance first
+
+## Python Environment
+
+This repository uses `uv` for Python management.
+
+It does not rely on the system Python and it does not rely on `pyenv`
+for interpreter selection inside the repo.
+
+Create the local virtual environment with the uv-managed Python 3.12
+runtime:
+
+```bash
+PYENV_VERSION=3.14.3 uv venv --python /Users/eax/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/bin/python3.12
+```
+
+Run commands through the local environment:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests
+```
+
+or:
+
+```bash
+PYTHONPATH=src PYENV_VERSION=3.14.3 uv run python -m unittest discover -s tests
+```
+
+The repo-local `.venv` is the default Python for this project.
