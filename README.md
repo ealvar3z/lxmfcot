@@ -1,6 +1,6 @@
 # lxdrcot
 
-`lxdrcot` is a TAK/CoT bridge for `LXDR`.
+`lxdrcot` is a TAK/CoT bridge for `LXDR` (`Logistics eXchange Data Requirements`).
 
 The project exists to connect tactical TAK/CoT workflows to the `LXDR` protocol implemented from `Project ADRIAN`, without building a new network stack. TAK remains the transport and operator surface. `lxdrcot` handles the protocol boundary:
 
