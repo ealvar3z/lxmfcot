@@ -1,5 +1,5 @@
 [project]
-name = "lxmfcot"
+name = "lxdrcot"
 version = "0.1.0"
 description = "TAK/CoT bridge for the LXDR protocol."
 readme = "README.md"
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-lxmfcot = "lxmfcot.commands:main"
+lxdrcot = "lxdrcot.commands:main"
 
 [build-system]
 requires = ["hatchling"]

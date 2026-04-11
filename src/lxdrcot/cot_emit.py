@@ -28,7 +28,7 @@ def build_status_cot(source_uid: str, event: StatusEvent) -> bytes:
         attrib={
             "version": "2.0",
             "type": "b-m-p-s-p-lxdr",
-            "uid": f"lxmfcot-{source_uid}-{event.status}",
+            "uid": f"lxdrcot-{source_uid}-{event.status}",
             "how": "m-g",
             "time": _cot_time(),
             "start": _cot_time(),
@@ -49,7 +49,7 @@ def build_status_cot(source_uid: str, event: StatusEvent) -> bytes:
     detail = SubElement(root, "detail")
     SubElement(
         detail,
-        "lxmfcot",
+        "lxdrcot",
         attrib={
             "source_uid": source_uid,
             "status": event.status,

@@ -1,6 +1,6 @@
 import unittest
 
-from lxmfcot.cot_map import is_supported_bridge_mode
+from lxdrcot.cot_map import is_supported_bridge_mode
 
 
 class TestCoTMap(unittest.TestCase):

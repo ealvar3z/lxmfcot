@@ -20,7 +20,7 @@ def classify_payload(data: bytes) -> MappingResult:
 
 
 def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, config: Any) -> Any:
-    """Build the first real PyTAK RX worker for lxmfcot."""
+    """Build the first real PyTAK RX worker for lxdrcot."""
 
     class BridgeRXWorker(pytak_module.QueueWorker):
         def __init__(self, queue: Any, tx_queue: Any, config: Any) -> None:

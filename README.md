@@ -1,8 +1,8 @@
-# lxmfcot
+# lxdrcot
 
-`lxmfcot` is a TAK/CoT bridge for `LXDR`.
+`lxdrcot` is a TAK/CoT bridge for `LXDR`.
 
-The project exists to connect tactical TAK/CoT workflows to the `LXDR` protocol implemented from `Project ADRIAN`, without building a new network stack. TAK remains the transport and operator surface. `lxmfcot` handles the protocol boundary:
+The project exists to connect tactical TAK/CoT workflows to the `LXDR` protocol implemented from `Project ADRIAN`, without building a new network stack. TAK remains the transport and operator surface. `lxdrcot` handles the protocol boundary:
 
 - ingest CoT from TAK via `PyTAK`
 - classify supported logistics events
@@ -14,14 +14,14 @@ The design is intentionally similar to the small TAK bridge pattern used by proj
 
 ## Scope
 
-`lxmfcot` is not:
+`lxdrcot` is not:
 
 - a custom network stack
 - a replacement for TAK
 - a replacement for `LXDR`
 - the authority for protocol validity or router state
 
-`lxmfcot` is:
+`lxdrcot` is:
 
 - a thin integration layer between CoT and `LXDR`
 - a `PyTAK` application with focused workers
@@ -71,7 +71,7 @@ Planned module shape:
 
 ## Mapping Discipline
 
-`lxmfcot` will be strict.
+`lxdrcot` will be strict.
 
 - It will only accept supported CoT event types.
 - It will only map fields that are explicitly understood.
@@ -89,7 +89,7 @@ Planned module shape:
 
 `LXDR` is the main protocol effort.
 
-`lxmfcot` is the next integration layer on top of that baseline. It exists to make `LXDR` usable in a TAK-centered workflow for experimentation, demos, and operational prototyping.
+`lxdrcot` is the next integration layer on top of that baseline. It exists to make `LXDR` usable in a TAK-centered workflow for experimentation, demos, and operational prototyping.
 
 ## Status
 

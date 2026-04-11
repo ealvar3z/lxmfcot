@@ -1,11 +1,11 @@
-"""Configuration helpers for lxmfcot."""
+"""Configuration helpers for lxdrcot."""
 
 from __future__ import annotations
 
 from configparser import ConfigParser, SectionProxy
 
 
-DEFAULT_SECTION_NAME = "lxmfcot"
+DEFAULT_SECTION_NAME = "lxdrcot"
 
 
 def default_config() -> ConfigParser:
@@ -22,4 +22,3 @@ def default_section() -> SectionProxy:
     """Return the default config section."""
     parser = default_config()
     return parser[DEFAULT_SECTION_NAME]
-

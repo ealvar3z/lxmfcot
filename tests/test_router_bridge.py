@@ -1,8 +1,8 @@
 import unittest
 
-from lxmfcot.cot_emit import build_status_cot
-from lxmfcot.cot_map import MappingResult
-from lxmfcot.router_bridge import accept_mapping
+from lxdrcot.cot_emit import build_status_cot
+from lxdrcot.cot_map import MappingResult
+from lxdrcot.router_bridge import accept_mapping
 
 
 class TestRouterBridge(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestRouterBridge(unittest.TestCase):
         outcome = accept_mapping(mapping)
         event = build_status_cot(mapping.source_uid, outcome.status_event)
 
-        self.assertIn(b"lxmfcot-test-uid-accepted", event)
+        self.assertIn(b"lxdrcot-test-uid-accepted", event)
         self.assertIn(b'status="accepted"', event)
         self.assertIn(b'detail="maintenance:test-uid"', event)
 

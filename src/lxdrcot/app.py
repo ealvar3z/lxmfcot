@@ -1,4 +1,4 @@
-"""Application wiring for lxmfcot."""
+"""Application wiring for lxdrcot."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ def _import_pytak() -> Any:
         import pytak  # type: ignore
     except ImportError as exc:  # pragma: no cover - runtime dependency gate
         raise RuntimeError(
-            "pytak is not installed. Pin it in pyproject.toml before running lxmfcot."
+            "pytak is not installed. Pin it in pyproject.toml before running lxdrcot."
         ) from exc
     return pytak
 

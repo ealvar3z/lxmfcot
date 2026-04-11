@@ -1,6 +1,6 @@
 # SBOM
 
-This file is the local, human-readable software bill of materials for `lxmfcot`.
+This file is the local, human-readable software bill of materials for `lxdrcot`.
 
 It is not the machine-resolved dependency graph. That role belongs to:
 
