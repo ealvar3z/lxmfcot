@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from xml.etree.ElementTree import ParseError, fromstring
 
-from .cot_emit import build_status_cot
+from .cot_emit import StatusEvent, build_status_cot
 from .cot_map import MappingResult, mapping_from_event
 from .router_bridge import accept_mapping
 
@@ -23,6 +23,28 @@ def classify_payload(data: bytes) -> MappingResult:
     return mapping_from_event(root, data)
 
 
+def build_error_status_cot(data: bytes, error: ValueError) -> bytes:
+    """Build an invalid bridge status event from bad inbound CoT."""
+    source_uid = extract_source_uid(data)
+    return build_status_cot(
+        source_uid,
+        StatusEvent(status="invalid", detail=str(error)),
+    )
+
+
+def extract_source_uid(data: bytes) -> str:
+    """Extract the source uid if it is available in malformed or partial CoT."""
+    try:
+        root = fromstring(data)
+    except ParseError:
+        return "unknown"
+
+    if root.tag != "event":
+        return "unknown"
+
+    return root.attrib.get("uid", "").strip() or "unknown"
+
+
 def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, config: Any) -> Any:
     """Build the first real PyTAK RX worker for lxdrcot."""
 
@@ -32,9 +54,12 @@ def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, conf
             self.tx_queue = tx_queue
 
         async def handle_data(self, data: bytes) -> None:
-            mapping = classify_payload(data)
-            outcome = accept_mapping(mapping)
-            event = build_status_cot(mapping.source_uid, outcome.status_event)
+            try:
+                mapping = classify_payload(data)
+                outcome = accept_mapping(mapping)
+                event = build_status_cot(mapping.source_uid, outcome.status_event)
+            except ValueError as exc:
+                event = build_error_status_cot(data, exc)
             await self.put_queue(event, self.tx_queue)
 
     return BridgeRXWorker(rx_queue, tx_queue, config)

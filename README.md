@@ -40,6 +40,58 @@ The smallest useful loop is:
    - invalid
    - synchronized
 
+## Emitted Bridge Status CoT
+
+`lxdrcot` will emit a bridge-status CoT event for each processed input.
+
+Current status event shape:
+
+- root element: `event`
+- CoT type: `b-m-p-s-p-lxdr`
+- UID format: `lxdrcot-{source_uid}-{status}`
+- detail element: `<lxdrcot ... />`
+
+Current emitted detail attributes:
+
+- `source_uid`
+  - the original inbound CoT UID when available
+- `status`
+  - one of:
+    - `accepted`
+    - `invalid`
+- `detail`
+  - a compact bridge summary
+  - examples:
+    - `maintenance:worker-unit:03:R3:FMTV`
+    - `supply:supply-unit:04:water:12:2026-04-11T18:00:00Z`
+    - `casevac:casevac-unit:01:18S UJ 22850 07080:2:hoist`
+    - `missing maintenance issue_text`
+
+Example emitted status event:
+
+```xml
+<event
+  version="2.0"
+  type="b-m-p-s-p-lxdr"
+  uid="lxdrcot-worker-unit-accepted"
+  how="m-g"
+  time="2026-04-10T20:00:00Z"
+  start="2026-04-10T20:00:00Z"
+  stale="2026-04-10T20:01:00Z">
+  <point lat="0.0" lon="0.0" hae="0" ce="9999999" le="9999999" />
+  <detail>
+    <lxdrcot
+      source_uid="worker-unit"
+      status="accepted"
+      detail="maintenance:worker-unit:03:R3:FMTV" />
+  </detail>
+</event>
+```
+
+This status contract is intentionally narrow. It gives operators and
+downstream adapters one stable bridge result shape while the real
+CoT-to-`LXDR` mappings continue to mature.
+
 ## Initial Supported Requests
 
 The first bridge targets should stay narrow:
