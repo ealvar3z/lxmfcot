@@ -59,27 +59,28 @@ class CasevacRequest:
 
 NormalizedRequest = MaintenanceRequest | SupplyRequest | CasevacRequest
 Extractor = Callable[[Element], NormalizedRequest]
+EventSpec = tuple[str, Extractor]
 
 
 def _require_contract(root: Element) -> Element:
     """Return the required lxdrcot detail contract element."""
-    detail = root.find("detail")
-    if detail is None:
+    d = root.find("detail")
+    if d is None:
         raise ValueError("missing CoT detail")
 
-    contract = detail.find("lxdrcot")
-    if contract is None:
+    c = d.find("lxdrcot")
+    if c is None:
         raise ValueError("missing lxdrcot detail")
 
-    return contract
+    return c
 
 
 def _require_attr(contract: Element, name: str, context: str) -> str:
     """Return a required attribute from the contract element."""
-    value = contract.attrib.get(name, "").strip()
-    if not value:
+    v = contract.attrib.get(name, "").strip()
+    if not v:
         raise ValueError(f"missing {context} {name}")
-    return value
+    return v
 
 
 def _maintenance_detail_from_event(root: Element) -> MaintenanceRequest:
@@ -148,7 +149,7 @@ def classify_event_type(event_type: str) -> str:
     return _event_spec(event_type.strip())[0]
 
 
-def _event_spec(event_type: str) -> tuple[str, Extractor]:
+def _event_spec(event_type: str) -> EventSpec:
     """Return the bridge mode and extractor for a supported CoT event type."""
     try:
         return EVENT_SPECS[event_type]
@@ -166,18 +167,18 @@ def mapping_from_event(root: Element, raw_payload: bytes) -> MappingResult:
     if not event_type:
         raise ValueError("missing CoT type")
 
-    bridge_mode, extractor = _event_spec(event_type)
-    normalized_request = extractor(root)
+    mode, extract = _event_spec(event_type)
+    req = extract(root)
 
     return MappingResult(
-        bridge_mode=bridge_mode,
+        bridge_mode=mode,
         source_uid=source_uid,
         raw_payload=raw_payload,
-        normalized_request=normalized_request,
+        normalized_request=req,
     )
 
 
-EVENT_SPECS: dict[str, tuple[str, Extractor]] = {
+EVENT_SPECS: dict[str, EventSpec] = {
     "b-m-p-s-p-lxdr-maintenance": ("maintenance", _maintenance_detail_from_event),
     "b-m-p-s-p-lxdr-supply": ("supply", _supply_detail_from_event),
     "b-m-p-s-p-lxdr-casevac": ("casevac", _casevac_detail_from_event),

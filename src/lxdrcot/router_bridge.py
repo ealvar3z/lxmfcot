@@ -8,6 +8,8 @@ from typing import Callable
 from .cot_emit import StatusEvent
 from .cot_map import CasevacRequest, MaintenanceRequest, MappingResult, SupplyRequest
 
+Formatter = Callable[[MappingResult], str]
+
 
 @dataclass(slots=True, frozen=True)
 class BridgeOutcome:
@@ -32,34 +34,34 @@ def accept_mapping(mapping: MappingResult) -> BridgeOutcome:
 def _bridge_detail(mapping: MappingResult) -> str:
     """Render a status detail string from the normalized request shape."""
     try:
-        formatter = BRIDGE_DETAIL_FORMATTERS[mapping.bridge_mode]
+        fmt = BRIDGE_DETAIL_FORMATTERS[mapping.bridge_mode]
     except KeyError:
         return f"{mapping.bridge_mode}:{mapping.source_uid}"
-    return formatter(mapping)
+    return fmt(mapping)
 
 
 def _require_maintenance_request(mapping: MappingResult) -> MaintenanceRequest:
     """Require a normalized maintenance request for maintenance mappings."""
-    request = mapping.normalized_request
-    if not isinstance(request, MaintenanceRequest):
+    req = mapping.normalized_request
+    if not isinstance(req, MaintenanceRequest):
         raise ValueError("missing normalized maintenance request")
-    return request
+    return req
 
 
 def _require_supply_request(mapping: MappingResult) -> SupplyRequest:
     """Require a normalized supply request for supply mappings."""
-    request = mapping.normalized_request
-    if not isinstance(request, SupplyRequest):
+    req = mapping.normalized_request
+    if not isinstance(req, SupplyRequest):
         raise ValueError("missing normalized supply request")
-    return request
+    return req
 
 
 def _require_casevac_request(mapping: MappingResult) -> CasevacRequest:
     """Require a normalized CASEVAC request for CASEVAC mappings."""
-    request = mapping.normalized_request
-    if not isinstance(request, CasevacRequest):
+    req = mapping.normalized_request
+    if not isinstance(req, CasevacRequest):
         raise ValueError("missing normalized casevac request")
-    return request
+    return req
 
 
 def _format_maintenance_detail(mapping: MappingResult) -> str:
@@ -89,7 +91,7 @@ def _format_casevac_detail(mapping: MappingResult) -> str:
     )
 
 
-BRIDGE_DETAIL_FORMATTERS: dict[str, Callable[[MappingResult], str]] = {
+BRIDGE_DETAIL_FORMATTERS: dict[str, Formatter] = {
     "maintenance": _format_maintenance_detail,
     "supply": _format_supply_detail,
     "casevac": _format_casevac_detail,

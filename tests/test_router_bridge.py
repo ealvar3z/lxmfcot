@@ -12,6 +12,13 @@ from lxdrcot.cot_map import CasevacRequest, MaintenanceRequest, MappingResult, S
 from lxdrcot.router_bridge import accept_mapping
 
 
+def _event(event_type: str, uid: str, attrs: str = "") -> bytes:
+    return (
+        f'<event version="2.0" type="{event_type}" uid="{uid}" how="m-g">'
+        f"<detail><lxdrcot {attrs} /></detail></event>"
+    ).encode()
+
+
 class TestRouterBridge(unittest.TestCase):
     @staticmethod
     def _fake_pytak():
@@ -55,10 +62,12 @@ class TestRouterBridge(unittest.TestCase):
 
     def test_bridge_rx_worker_emits_status_event(self) -> None:
         event = self._run_worker_payload(
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-maintenance" '
-            b'uid="worker-unit" how="m-g"><detail><lxdrcot request_priority="03" '
-            b'maintenance_support="R3" equipment_nomenclature="FMTV" '
-            b'issue_text="battery dead" /></detail></event>'
+            _event(
+                "b-m-p-s-p-lxdr-maintenance",
+                "worker-unit",
+                'request_priority="03" maintenance_support="R3" '
+                'equipment_nomenclature="FMTV" issue_text="battery dead"',
+            )
         )
 
         self.assertIn(b"lxdrcot-worker-unit-accepted", event)
@@ -66,10 +75,12 @@ class TestRouterBridge(unittest.TestCase):
 
     def test_bridge_rx_worker_emits_invalid_status_event(self) -> None:
         event = self._run_worker_payload(
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-maintenance" '
-            b'uid="worker-unit" how="m-g"><detail><lxdrcot request_priority="03" '
-            b'maintenance_support="R3" equipment_nomenclature="FMTV" />'
-            b"</detail></event>"
+            _event(
+                "b-m-p-s-p-lxdr-maintenance",
+                "worker-unit",
+                'request_priority="03" maintenance_support="R3" '
+                'equipment_nomenclature="FMTV"',
+            )
         )
 
         self.assertIn(b"lxdrcot-worker-unit-invalid", event)
@@ -78,10 +89,12 @@ class TestRouterBridge(unittest.TestCase):
 
     def test_bridge_rx_worker_emits_supply_status_event(self) -> None:
         event = self._run_worker_payload(
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-supply" '
-            b'uid="supply-unit" how="m-g"><detail><lxdrcot request_priority="04" '
-            b'item_nomenclature="water" quantity="12" '
-            b'needed_by="2026-04-11T18:00:00Z" /></detail></event>'
+            _event(
+                "b-m-p-s-p-lxdr-supply",
+                "supply-unit",
+                'request_priority="04" item_nomenclature="water" quantity="12" '
+                'needed_by="2026-04-11T18:00:00Z"',
+            )
         )
 
         self.assertIn(b"lxdrcot-supply-unit-accepted", event)
@@ -92,10 +105,12 @@ class TestRouterBridge(unittest.TestCase):
 
     def test_bridge_rx_worker_emits_casevac_status_event(self) -> None:
         event = self._run_worker_payload(
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-casevac" '
-            b'uid="casevac-unit" how="m-g"><detail><lxdrcot request_priority="01" '
-            b'pickup_location="18S UJ 22850 07080" patient_count="2" '
-            b'special_equipment="hoist" /></detail></event>'
+            _event(
+                "b-m-p-s-p-lxdr-casevac",
+                "casevac-unit",
+                'request_priority="01" pickup_location="18S UJ 22850 07080" '
+                'patient_count="2" special_equipment="hoist"',
+            )
         )
 
         self.assertIn(b"lxdrcot-casevac-unit-accepted", event)
@@ -105,7 +120,7 @@ class TestRouterBridge(unittest.TestCase):
         )
 
     def test_accept_mapping_returns_bridge_outcome(self) -> None:
-        mapping = MappingResult(
+        m = MappingResult(
             bridge_mode="maintenance",
             source_uid="test-uid",
             raw_payload=b"<event />",
@@ -118,7 +133,7 @@ class TestRouterBridge(unittest.TestCase):
             ),
         )
 
-        outcome = accept_mapping(mapping)
+        outcome = accept_mapping(m)
 
         self.assertTrue(outcome.accepted)
         self.assertEqual(outcome.status_event.status, "accepted")
@@ -128,7 +143,7 @@ class TestRouterBridge(unittest.TestCase):
         )
 
     def test_build_status_cot_contains_bridge_fields(self) -> None:
-        mapping = MappingResult(
+        m = MappingResult(
             bridge_mode="maintenance",
             source_uid="test-uid",
             raw_payload=b"<event />",
@@ -141,27 +156,27 @@ class TestRouterBridge(unittest.TestCase):
             ),
         )
 
-        outcome = accept_mapping(mapping)
-        event = build_status_cot(mapping.source_uid, outcome.status_event)
+        outcome = accept_mapping(m)
+        event = build_status_cot(m.source_uid, outcome.status_event)
 
         self.assertIn(b"lxdrcot-test-uid-accepted", event)
         self.assertIn(b'status="accepted"', event)
         self.assertIn(b'detail="maintenance:test-uid:02:R2:JLTV"', event)
 
     def test_classify_payload_parses_cot_xml(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-supply" '
-            b'uid="s4-unit-2" how="m-g"><detail><lxdrcot request_priority="04" '
-            b'item_nomenclature="battery" quantity="6" '
-            b'needed_by="2026-04-11T12:00:00Z" /></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-supply",
+            "s4-unit-2",
+            'request_priority="04" item_nomenclature="battery" quantity="6" '
+            'needed_by="2026-04-11T12:00:00Z"',
         )
 
-        mapping = classify_payload(payload)
+        m = classify_payload(payload)
 
-        self.assertEqual(mapping.bridge_mode, "supply")
-        self.assertEqual(mapping.source_uid, "s4-unit-2")
+        self.assertEqual(m.bridge_mode, "supply")
+        self.assertEqual(m.source_uid, "s4-unit-2")
         self.assertEqual(
-            mapping.normalized_request,
+            m.normalized_request,
             SupplyRequest(
                 source_uid="s4-unit-2",
                 request_priority="04",
@@ -172,20 +187,20 @@ class TestRouterBridge(unittest.TestCase):
         )
 
     def test_classify_payload_extracts_maintenance_request(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-maintenance" '
-            b'uid="s4-unit-3" how="m-g"><detail><lxdrcot request_priority="01" '
-            b'maintenance_support="R1" equipment_nomenclature="MTVR" '
-            b'issue_text="flat tire" /></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-maintenance",
+            "s4-unit-3",
+            'request_priority="01" maintenance_support="R1" '
+            'equipment_nomenclature="MTVR" issue_text="flat tire"',
         )
 
-        mapping = classify_payload(payload)
+        m = classify_payload(payload)
 
-        self.assertEqual(mapping.bridge_mode, "maintenance")
-        self.assertEqual(mapping.source_uid, "s4-unit-3")
-        self.assertIsNotNone(mapping.normalized_request)
+        self.assertEqual(m.bridge_mode, "maintenance")
+        self.assertEqual(m.source_uid, "s4-unit-3")
+        self.assertIsNotNone(m.normalized_request)
 
-        outcome = accept_mapping(mapping)
+        outcome = accept_mapping(m)
 
         self.assertEqual(
             outcome.status_event.detail,
@@ -193,19 +208,19 @@ class TestRouterBridge(unittest.TestCase):
         )
 
     def test_classify_payload_extracts_casevac_request(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-casevac" '
-            b'uid="s4-unit-4" how="m-g"><detail><lxdrcot request_priority="02" '
-            b'pickup_location="18S UJ 22850 07080" patient_count="1" '
-            b'special_equipment="none" /></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-casevac",
+            "s4-unit-4",
+            'request_priority="02" pickup_location="18S UJ 22850 07080" '
+            'patient_count="1" special_equipment="none"',
         )
 
-        mapping = classify_payload(payload)
+        m = classify_payload(payload)
 
-        self.assertEqual(mapping.bridge_mode, "casevac")
-        self.assertEqual(mapping.source_uid, "s4-unit-4")
+        self.assertEqual(m.bridge_mode, "casevac")
+        self.assertEqual(m.source_uid, "s4-unit-4")
         self.assertEqual(
-            mapping.normalized_request,
+            m.normalized_request,
             CasevacRequest(
                 source_uid="s4-unit-4",
                 request_priority="02",
@@ -215,7 +230,7 @@ class TestRouterBridge(unittest.TestCase):
             ),
         )
 
-        outcome = accept_mapping(mapping)
+        outcome = accept_mapping(m)
 
         self.assertEqual(
             outcome.status_event.detail,
@@ -242,17 +257,17 @@ class TestRouterBridge(unittest.TestCase):
         self.assertIn(b'detail="missing CoT detail"', event)
 
     def test_accept_mapping_rejects_missing_normalized_maintenance(self) -> None:
-        mapping = MappingResult(
+        m = MappingResult(
             bridge_mode="maintenance",
             source_uid="test-uid",
             raw_payload=b"<event />",
         )
 
         with self.assertRaisesRegex(ValueError, "missing normalized maintenance request"):
-            accept_mapping(mapping)
+            accept_mapping(m)
 
     def test_accept_mapping_returns_supply_bridge_outcome(self) -> None:
-        mapping = MappingResult(
+        m = MappingResult(
             bridge_mode="supply",
             source_uid="supply-uid",
             raw_payload=b"<event />",
@@ -265,7 +280,7 @@ class TestRouterBridge(unittest.TestCase):
             ),
         )
 
-        outcome = accept_mapping(mapping)
+        outcome = accept_mapping(m)
 
         self.assertTrue(outcome.accepted)
         self.assertEqual(
@@ -274,7 +289,7 @@ class TestRouterBridge(unittest.TestCase):
         )
 
     def test_accept_mapping_returns_casevac_bridge_outcome(self) -> None:
-        mapping = MappingResult(
+        m = MappingResult(
             bridge_mode="casevac",
             source_uid="casevac-uid",
             raw_payload=b"<event />",
@@ -287,7 +302,7 @@ class TestRouterBridge(unittest.TestCase):
             ),
         )
 
-        outcome = accept_mapping(mapping)
+        outcome = accept_mapping(m)
 
         self.assertTrue(outcome.accepted)
         self.assertEqual(

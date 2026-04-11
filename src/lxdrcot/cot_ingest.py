@@ -25,9 +25,9 @@ def classify_payload(data: bytes) -> MappingResult:
 
 def build_error_status_cot(data: bytes, error: ValueError) -> bytes:
     """Build an invalid bridge status event from bad inbound CoT."""
-    source_uid = extract_source_uid(data)
+    uid = extract_source_uid(data)
     return build_status_cot(
-        source_uid,
+        uid,
         StatusEvent(status="invalid", detail=str(error)),
     )
 
@@ -55,9 +55,9 @@ def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, conf
 
         async def handle_data(self, data: bytes) -> None:
             try:
-                mapping = classify_payload(data)
-                outcome = accept_mapping(mapping)
-                event = build_status_cot(mapping.source_uid, outcome.status_event)
+                m = classify_payload(data)
+                out = accept_mapping(m)
+                event = build_status_cot(m.source_uid, out.status_event)
             except ValueError as exc:
                 event = build_error_status_cot(data, exc)
             await self.put_queue(event, self.tx_queue)

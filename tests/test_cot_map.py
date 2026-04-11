@@ -11,6 +11,13 @@ from lxdrcot.cot_map import (
 )
 
 
+def _event(event_type: str, uid: str, attrs: str = "") -> bytes:
+    return (
+        f'<event version="2.0" type="{event_type}" uid="{uid}" how="m-g">'
+        f"<detail><lxdrcot {attrs} /></detail></event>"
+    ).encode()
+
+
 class TestCoTMap(unittest.TestCase):
     def test_supported_bridge_modes(self) -> None:
         self.assertTrue(is_supported_bridge_mode("maintenance"))
@@ -33,21 +40,21 @@ class TestCoTMap(unittest.TestCase):
         )
 
     def test_mapping_from_event(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-maintenance" '
-            b'uid="unit-1" how="m-g"><detail><lxdrcot request_priority="02" '
-            b'maintenance_support="R2" equipment_nomenclature="JLTV" '
-            b'issue_text="starter failed" /></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-maintenance",
+            "unit-1",
+            'request_priority="02" maintenance_support="R2" '
+            'equipment_nomenclature="JLTV" issue_text="starter failed"',
         )
         root = fromstring(payload)
 
-        mapping = mapping_from_event(root, payload)
+        m = mapping_from_event(root, payload)
 
-        self.assertEqual(mapping.bridge_mode, "maintenance")
-        self.assertEqual(mapping.source_uid, "unit-1")
-        self.assertEqual(mapping.raw_payload, payload)
+        self.assertEqual(m.bridge_mode, "maintenance")
+        self.assertEqual(m.source_uid, "unit-1")
+        self.assertEqual(m.raw_payload, payload)
         self.assertEqual(
-            mapping.normalized_request,
+            m.normalized_request,
             MaintenanceRequest(
                 source_uid="unit-1",
                 request_priority="02",
@@ -89,20 +96,20 @@ class TestCoTMap(unittest.TestCase):
             mapping_from_event(root, payload)
 
     def test_mapping_from_event_extracts_supply_request(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-supply" '
-            b'uid="unit-2" how="m-g"><detail><lxdrcot request_priority="03" '
-            b'item_nomenclature="battery" quantity="4" needed_by="2026-04-11T12:00:00Z" '
-            b'/></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-supply",
+            "unit-2",
+            'request_priority="03" item_nomenclature="battery" '
+            'quantity="4" needed_by="2026-04-11T12:00:00Z"',
         )
         root = fromstring(payload)
 
-        mapping = mapping_from_event(root, payload)
+        m = mapping_from_event(root, payload)
 
-        self.assertEqual(mapping.bridge_mode, "supply")
-        self.assertEqual(mapping.source_uid, "unit-2")
+        self.assertEqual(m.bridge_mode, "supply")
+        self.assertEqual(m.source_uid, "unit-2")
         self.assertEqual(
-            mapping.normalized_request,
+            m.normalized_request,
             SupplyRequest(
                 source_uid="unit-2",
                 request_priority="03",
@@ -124,20 +131,20 @@ class TestCoTMap(unittest.TestCase):
             mapping_from_event(root, payload)
 
     def test_mapping_from_event_extracts_casevac_request(self) -> None:
-        payload = (
-            b'<event version="2.0" type="b-m-p-s-p-lxdr-casevac" '
-            b'uid="unit-3" how="m-g"><detail><lxdrcot request_priority="01" '
-            b'pickup_location="18S UJ 22850 07080" patient_count="2" '
-            b'special_equipment="hoist" /></detail></event>'
+        payload = _event(
+            "b-m-p-s-p-lxdr-casevac",
+            "unit-3",
+            'request_priority="01" pickup_location="18S UJ 22850 07080" '
+            'patient_count="2" special_equipment="hoist"',
         )
         root = fromstring(payload)
 
-        mapping = mapping_from_event(root, payload)
+        m = mapping_from_event(root, payload)
 
-        self.assertEqual(mapping.bridge_mode, "casevac")
-        self.assertEqual(mapping.source_uid, "unit-3")
+        self.assertEqual(m.bridge_mode, "casevac")
+        self.assertEqual(m.source_uid, "unit-3")
         self.assertEqual(
-            mapping.normalized_request,
+            m.normalized_request,
             CasevacRequest(
                 source_uid="unit-3",
                 request_priority="01",
