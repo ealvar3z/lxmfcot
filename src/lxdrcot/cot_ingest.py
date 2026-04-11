@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 from typing import Any
+from xml.etree.ElementTree import ParseError, fromstring
 
 from .cot_emit import build_status_cot
-from .cot_map import MappingResult
+from .cot_map import MappingResult, mapping_from_event
 from .router_bridge import accept_mapping
 
 
 def classify_payload(data: bytes) -> MappingResult:
-    """Classify raw payload bytes into the current placeholder bridge mode."""
-    # v0 keeps the ingest contract narrow. Real CoT parsing lands next.
-    return MappingResult(
-        bridge_mode="maintenance",
-        source_uid="pending",
-        raw_payload=data,
-    )
+    """Classify raw CoT XML into a supported bridge mode."""
+    try:
+        root = fromstring(data)
+    except ParseError as exc:
+        raise ValueError("invalid CoT XML") from exc
+
+    if root.tag != "event":
+        raise ValueError(f"unsupported CoT root element: {root.tag}")
+
+    return mapping_from_event(root, data)
 
 
 def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, config: Any) -> Any:
