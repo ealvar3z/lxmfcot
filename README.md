@@ -12,37 +12,9 @@ The project exists to connect tactical TAK/CoT workflows to the `LXDR` protocol 
 
 The design is intentionally similar to the small TAK bridge pattern used by projects such as `aiscot`, `djicot`, `adsbcot`, and `aprscot`.
 
-## Scope
-
-`lxdrcot` is not:
-
-- a custom network stack
-- a replacement for TAK
-- a replacement for `LXDR`
-- the authority for protocol validity or router state
-
-`lxdrcot` is:
-
-- a thin integration layer between CoT and `LXDR`
-- a `PyTAK` application with focused workers
-- a bridge for a small, explicit set of logistics workflows
-
-## Planned Bridge Loop
-
-The smallest useful loop is:
-
-1. Receive CoT from TAK using `PyTAK`.
-2. Parse and classify the incoming event.
-3. Map the event into one supported `LXDR` request.
-4. Pass the request into the local `LXDR` router.
-5. Emit CoT status back to TAK:
-   - accepted
-   - invalid
-   - synchronized
-
 ## Emitted Bridge Status CoT
 
-`lxdrcot` will emit a bridge-status CoT event for each processed input.
+`lxdrcot` emits a bridge-status CoT event for each processed input.
 
 Current status event shape:
 
@@ -54,18 +26,18 @@ Current status event shape:
 Current emitted detail attributes:
 
 - `source_uid`
-  - the original inbound CoT UID when available
+    - the original inbound CoT UID when available
 - `status`
-  - one of:
-    - `accepted`
-    - `invalid`
+    - one of:
+        - `accepted`
+        - `invalid`
 - `detail`
-  - a compact bridge summary
-  - examples:
-    - `maintenance:worker-unit:03:R3:FMTV`
-    - `supply:supply-unit:04:water:12:2026-04-11T18:00:00Z`
-    - `casevac:casevac-unit:01:18S UJ 22850 07080:2:hoist`
-    - `missing maintenance issue_text`
+    - a compact bridge summary
+    - examples:
+        - `maintenance:worker-unit:03:R3:FMTV`
+        - `supply:supply-unit:04:water:12:2026-04-11T18:00:00Z`
+        - `casevac:casevac-unit:01:18S UJ 22850 07080:2:hoist`
+        - `missing maintenance issue_text`
 
 Example emitted status event:
 
@@ -88,71 +60,15 @@ Example emitted status event:
 </event>
 ```
 
-This status contract is intentionally narrow. It gives operators and
-downstream adapters one stable bridge result shape while the real
-CoT-to-`LXDR` mappings continue to mature.
+This status contract is intentionally narrow.
 
 ## Initial Supported Requests
 
-The first bridge targets should stay narrow:
+The first bridge targets:
 
 - maintenance request
 - supply request
 - CASEVAC request
-
-These are the best first mappings because they already exist in `LXDR v1`, have clear operational value, and are easy to explain in a demo.
-
-## Architecture
-
-Planned module shape:
-
-- `commands`
-  - CLI entrypoint
-- `app`
-  - `PyTAK` `CLITool` setup and worker registration
-- `cot_ingest`
-  - RX-side CoT worker
-- `cot_emit`
-  - TX-side CoT status emitter
-- `cot_map`
-  - CoT to `LXDR` and `LXDR` to CoT mapping logic
-- `router_bridge`
-  - local handoff into the `LXDR` router
-- `config`
-  - bridge-specific configuration
-
-## Mapping Discipline
-
-`lxdrcot` will be strict.
-
-- It will only accept supported CoT event types.
-- It will only map fields that are explicitly understood.
-- It will reject or mark incomplete events that cannot satisfy required `LXDR` fields.
-- It will not silently invent protocol data.
-
-`LXDR` remains the authority for:
-
-- request validity
-- link framing
-- synchronization semantics
-- router state
-
-## Relationship To LXDR
-
-`LXDR` is the main protocol effort.
-
-`lxdrcot` is the next integration layer on top of that baseline. It exists to make `LXDR` usable in a TAK-centered workflow for experimentation, demos, and operational prototyping.
-
-## Status
-
-This repository is in early implementation state.
-
-The immediate next work is:
-
-- define the first CoT event contracts
-- define exact CoT to `LXDR` field mappings
-- build the first working `PyTAK` application skeleton
-- implement one end-to-end mapping, likely maintenance first
 
 ## Python Environment
 

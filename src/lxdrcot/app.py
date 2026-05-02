@@ -1,4 +1,21 @@
-"""Application wiring for lxdrcot."""
+"""Application wiring for lxdrcot.
+ Module shape:
+    - commands
+      - CLI entrypoint
+    - app
+      - PyTAK CLITool setup and worker registration
+    - cot_ingest
+      - RX-side CoT worker
+    - cot_emit
+      - TX-side CoT status emitter
+    - cot_map
+      - CoT to LXDR and LXDR to CoT mapping logic
+    - router_bridge
+      - local handoff into the LXDR router
+    - config
+      - bridge-specific configuration
+"""
+
 
 from __future__ import annotations
 
