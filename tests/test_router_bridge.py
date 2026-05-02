@@ -9,6 +9,7 @@ from lxdrcot.cot_ingest import (
     extract_source_uid,
 )
 from lxdrcot.cot_map import CasevacRequest, MaintenanceRequest, MappingResult, SupplyRequest
+from lxdrcot.local_router import LocalLXDRRouter
 from lxdrcot.lxdr_request import LXDRRequestContainer
 from lxdrcot.router_bridge import accept_mapping
 
@@ -44,7 +45,7 @@ class TestRouterBridge(unittest.TestCase):
         return config["lxdrcot"]
 
     @classmethod
-    def _run_worker_payload(cls, payload: bytes) -> bytes:
+    def _run_worker_payload(cls, payload: bytes, router: LocalLXDRRouter | None = None) -> bytes:
         import asyncio
 
         async def exercise() -> bytes:
@@ -55,6 +56,7 @@ class TestRouterBridge(unittest.TestCase):
                 rx_queue,
                 tx_queue,
                 cls._config_section(),
+                router=router,
             )
             await worker.handle_data(payload)
             return await tx_queue.get()
@@ -73,6 +75,25 @@ class TestRouterBridge(unittest.TestCase):
 
         self.assertIn(b"lxdrcot-worker-unit-accepted", event)
         self.assertIn(b'detail="maintenance:worker-unit:03:R3:FMTV"', event)
+
+    def test_bridge_rx_worker_submits_lxdr_request_to_local_router(self) -> None:
+        router = LocalLXDRRouter()
+        event = self._run_worker_payload(
+            _event(
+                "b-m-p-s-p-lxdr-maintenance",
+                "worker-unit",
+                'request_priority="03" maintenance_support="R3" '
+                'equipment_nomenclature="FMTV" issue_text="battery dead"',
+            ),
+            router=router,
+        )
+
+        self.assertIn(b"lxdrcot-worker-unit-accepted", event)
+        self.assertEqual(len(router.submitted_requests()), 1)
+        req = router.submitted_requests()[0]
+        self.assertEqual(req.source_uid, "worker-unit")
+        self.assertEqual(req.header.local_request_id, "maintenance:worker-unit")
+        self.assertEqual(req.segment.kind, "maintenance")
 
     def test_bridge_rx_worker_emits_invalid_status_event(self) -> None:
         event = self._run_worker_payload(

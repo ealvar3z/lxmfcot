@@ -7,6 +7,7 @@ from xml.etree.ElementTree import ParseError, fromstring
 
 from .cot_emit import StatusEvent, build_status_cot
 from .cot_map import MappingResult, mapping_from_event
+from .local_router import LocalLXDRRouter
 from .router_bridge import accept_mapping
 
 
@@ -45,18 +46,27 @@ def extract_source_uid(data: bytes) -> str:
     return root.attrib.get("uid", "").strip() or "unknown"
 
 
-def build_bridge_rx_worker(pytak_module: Any, rx_queue: Any, tx_queue: Any, config: Any) -> Any:
+def build_bridge_rx_worker(
+    pytak_module: Any,
+    rx_queue: Any,
+    tx_queue: Any,
+    config: Any,
+    router: LocalLXDRRouter | None = None,
+) -> Any:
     """Build the first real PyTAK RX worker for lxdrcot."""
+    sink = router or LocalLXDRRouter()
 
     class BridgeRXWorker(pytak_module.QueueWorker):
         def __init__(self, queue: Any, tx_queue: Any, config: Any) -> None:
             super().__init__(queue, config)
             self.tx_queue = tx_queue
+            self.router = sink
 
         async def handle_data(self, data: bytes) -> None:
             try:
                 m = classify_payload(data)
                 out = accept_mapping(m)
+                self.router.submit(out.lxdr_request)
                 event = build_status_cot(m.source_uid, out.status_event)
             except ValueError as exc:
                 event = build_error_status_cot(data, exc)

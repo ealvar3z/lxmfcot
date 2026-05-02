@@ -7,6 +7,7 @@ from typing import Any
 
 from .config import default_section
 from .cot_ingest import build_bridge_rx_worker
+from .local_router import LocalLXDRRouter
 
 
 def _import_pytak() -> Any:
@@ -28,6 +29,7 @@ async def run() -> None:
     """Run the bridge tool."""
     pytak = _import_pytak()
     config = default_section()
+    router = LocalLXDRRouter()
     clitool = build_clitool(pytak, config)
     await clitool.setup()
     clitool.add_tasks(
@@ -37,6 +39,7 @@ async def run() -> None:
                 clitool.rx_queue,
                 clitool.tx_queue,
                 config,
+                router=router,
             )
         }
     )
