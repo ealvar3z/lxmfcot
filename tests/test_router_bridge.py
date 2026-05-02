@@ -9,6 +9,7 @@ from lxdrcot.cot_ingest import (
     extract_source_uid,
 )
 from lxdrcot.cot_map import CasevacRequest, MaintenanceRequest, MappingResult, SupplyRequest
+from lxdrcot.lxdr_request import LXDRRequestContainer
 from lxdrcot.router_bridge import accept_mapping
 
 
@@ -136,6 +137,7 @@ class TestRouterBridge(unittest.TestCase):
         outcome = accept_mapping(m)
 
         self.assertTrue(outcome.accepted)
+        self.assertIsInstance(outcome.lxdr_request, LXDRRequestContainer)
         self.assertEqual(outcome.status_event.status, "accepted")
         self.assertEqual(
             outcome.status_event.detail,

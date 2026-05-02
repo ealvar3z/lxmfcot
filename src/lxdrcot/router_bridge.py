@@ -7,6 +7,7 @@ from typing import Callable
 
 from .cot_emit import StatusEvent
 from .cot_map import CasevacRequest, MaintenanceRequest, MappingResult, SupplyRequest
+from .lxdr_request import LXDRRequestContainer, request_from_mapping
 
 Formatter = Callable[[MappingResult], str]
 
@@ -16,14 +17,17 @@ class BridgeOutcome:
     """Represents the local bridge outcome."""
 
     accepted: bool
+    lxdr_request: LXDRRequestContainer
     status_event: StatusEvent
 
 
 def accept_mapping(mapping: MappingResult) -> BridgeOutcome:
     """Accept a classified mapping into the local bridge flow."""
+    req = request_from_mapping(mapping)
     detail = _bridge_detail(mapping)
     return BridgeOutcome(
         accepted=True,
+        lxdr_request=req,
         status_event=StatusEvent(
             status="accepted",
             detail=detail,
